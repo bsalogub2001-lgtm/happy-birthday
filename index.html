@@ -19,7 +19,7 @@
     background: linear-gradient(to bottom, #fff9e6 0%, #fff4cc 5%, #d4a017 40%, #b58000 100%);
   }
 
-  /* Foam at top */
+  /* Foam at top (Unchanged) */
   .foam {
     position: absolute;
     top: 0;
@@ -54,7 +54,7 @@
   }
   button:hover { transform: scale(1.1); background: #ffd700cc; }
 
-  /* Bubbles */
+  /* Bubbles (Unchanged) */
   .bubbles {
     position: absolute;
     bottom: 0;
@@ -82,22 +82,23 @@
     position: absolute;
     width: 120px;
     bottom: 100px;
-    opacity: 0;
-    /* Transition applies to all changes */
+    /* Mugs start invisible by default, only transition set here */
+    opacity: 0; 
     transition: all 1s ease;
     z-index: 10;
   }
-  /* Mug Start State (Off-screen and rotated) */
-  #leftMug {
+  
+  /* NEW: Starting state class (Off-screen and rotated) */
+  .startLeft {
     left: -300px;
     transform: rotate(-20deg);
   }
-  #rightMug {
+  .startRight {
     right: -300px;
     transform: rotate(20deg);
   }
 
-  /* Mug Slide-In State (Visible and positioned) */
+  /* Destination position when 'show' class is added */
   .showLeft {
     left: calc(50% - 150px);
     opacity: 1; 
@@ -109,7 +110,7 @@
 
   /* Mug Clink State (Straightened) */
   .clink {
-    transform: rotate(0deg) !important; /* Use !important to override the rotation on #leftMug/#rightMug */
+    transform: rotate(0deg); 
   }
 
   /* --- Photo popup: The fade-in element --- */
@@ -137,10 +138,10 @@
   <button id="celebrateButton">Celebrate!</button>
   <div class="bubbles" id="bubbles"></div>
 
-  <img id="leftMug" class="mug"
+  <img id="leftMug" class="mug startLeft"
         src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d6/Emoji_u1f37a.svg/120px-Emoji_u1f37a.svg.png"
         alt="Beer mug left">
-  <img id="rightMug" class="mug"
+  <img id="rightMug" class="mug startRight"
         src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d6/Emoji_u1f37a.svg/120px-Emoji_u1f37a.svg.png"
         alt="Beer mug right">
 
@@ -161,7 +162,16 @@ btn.addEventListener("click", () => {
   // Disable button to prevent re-triggering animation
   btn.disabled = true;
 
-  // 1. Create bubbles...
+  // 1. Remove start classes immediately to set up for the slide-in.
+  // The 'show' class will override 'left' and 'opacity' starting from the 'start' class values.
+  leftMug.classList.remove("startLeft");
+  rightMug.classList.remove("startRight");
+  
+  // 2. Add 'show' classes to trigger the 1s slide-in transition.
+  leftMug.classList.add("showLeft");
+  rightMug.classList.add("showRight");
+  
+  // 3. Create bubbles... (Unchanged)
   for (let i = 0; i < 40; i++) {
     const b = document.createElement("div");
     b.className = "bubble";
@@ -175,11 +185,7 @@ btn.addEventListener("click", () => {
     setTimeout(() => b.remove(), (dur + 2) * 1000);
   }
 
-  // 2. Slide mugs in (1s transition)
-  leftMug.classList.add("showLeft");
-  rightMug.classList.add("showRight");
-
-  // 3. Clink, straighten mugs, and show photo (1s after slide-in starts)
+  // 4. Clink, straighten mugs, and show photo (1s after slide-in starts)
   setTimeout(() => {
     // Add 'clink' class to stop rotation
     leftMug.classList.add("clink");
@@ -192,18 +198,20 @@ btn.addEventListener("click", () => {
     try { cheerSound.currentTime = 0; cheerSound.play(); } catch(e){}
   }, 1000);
 
-  // 4. Fade photo out (after 5s display time)
+  // 5. Fade photo out (after 5s display time)
   setTimeout(() => photo.classList.remove("showPhoto"), 6000);
 
-  // 5. Reset mugs (1s after photo fade-out starts)
+  // 6. Reset mugs (1s after photo fade-out starts)
   setTimeout(() => {
-    // 5a. Remove the classes. This causes the mugs to fade out (opacity 1 -> 0)
-    // and slide back to the starting positions defined in #leftMug/#rightMug CSS (left: -300px)
+    // 6a. Remove the 'show' and 'clink' classes. This triggers the 1s fade-out (opacity 1 -> 0)
+    // and slide back to the default CSS state (left/right undefined, opacity 0).
     leftMug.classList.remove("showLeft", "clink");
     rightMug.classList.remove("showRight", "clink");
 
-    // Re-enable the button after animation completes
+    // 6b. After the fade-out is complete (1s), put the 'start' classes back to reset their position.
     setTimeout(() => {
+        leftMug.classList.add("startLeft");
+        rightMug.classList.add("startRight");
         btn.disabled = false;
     }, 1000);
     
