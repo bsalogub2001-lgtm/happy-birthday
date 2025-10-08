@@ -16,7 +16,6 @@
     align-items: center;
     overflow: hidden;
     text-align: center;
-    /* The beer gradient background */
     background: linear-gradient(to bottom, #fff9e6 0%, #fff4cc 5%, #d4a017 40%, #b58000 100%);
   }
 
@@ -83,33 +82,34 @@
     position: absolute;
     width: 120px;
     bottom: 100px;
-    /* Mugs start invisible */
-    opacity: 0; 
-    /* Transition applied to all properties (position, rotation, opacity) */
+    opacity: 0;
+    /* Transition applies to all changes */
     transition: all 1s ease;
     z-index: 10;
   }
+  /* Mug Start State (Off-screen and rotated) */
   #leftMug {
-    /* Start position: Far off the left screen edge */
-    left: -300px; 
+    left: -300px;
     transform: rotate(-20deg);
   }
   #rightMug {
-    /* Start position: Far off the right screen edge */
-    right: -300px; 
+    right: -300px;
     transform: rotate(20deg);
   }
 
-  /* Destination position when 'show' class is added */
+  /* Mug Slide-In State (Visible and positioned) */
   .showLeft {
     left: calc(50% - 150px);
-    /* CRITICAL: Ensure opacity is set to 1 to override the default 0 */
     opacity: 1; 
   }
   .showRight {
     right: calc(50% - 150px);
-    /* CRITICAL: Ensure opacity is set to 1 to override the default 0 */
     opacity: 1;
+  }
+
+  /* Mug Clink State (Straightened) */
+  .clink {
+    transform: rotate(0deg) !important; /* Use !important to override the rotation on #leftMug/#rightMug */
   }
 
   /* --- Photo popup: The fade-in element --- */
@@ -121,13 +121,11 @@
     max-width: 300px;
     border: 5px solid gold;
     border-radius: 10px;
-    /* CRITICAL: Start invisible for the fade-in effect */
     opacity: 0; 
     z-index: 20;
     transition: opacity 1s ease;
   }
   .showPhoto {
-    /* Destination opacity for fading in */
     opacity: 1;
   }
 </style>
@@ -158,15 +156,11 @@ const rightMug = document.getElementById("rightMug");
 const photo = document.getElementById("photo");
 const cheerSound = document.getElementById("cheerSound");
 
-// Initialize mugs to their off-screen, rotated starting positions 
-// This ensures the CSS position is overridden by JS for a cleaner reset later.
-leftMug.style.left = "-300px";
-leftMug.style.transform = "rotate(-20deg)";
-rightMug.style.right = "-300px";
-rightMug.style.transform = "rotate(20deg)";
-
 
 btn.addEventListener("click", () => {
+  // Disable button to prevent re-triggering animation
+  btn.disabled = true;
+
   // 1. Create bubbles...
   for (let i = 0; i < 40; i++) {
     const b = document.createElement("div");
@@ -184,12 +178,12 @@ btn.addEventListener("click", () => {
   // 2. Slide mugs in (1s transition)
   leftMug.classList.add("showLeft");
   rightMug.classList.add("showRight");
-  
+
   // 3. Clink, straighten mugs, and show photo (1s after slide-in starts)
   setTimeout(() => {
-    // Stop rotation at the center (the clink)
-    leftMug.style.transform = "rotate(0deg)";
-    rightMug.style.transform = "rotate(0deg)";
+    // Add 'clink' class to stop rotation
+    leftMug.classList.add("clink");
+    rightMug.classList.add("clink");
     
     // Fade in the photo
     photo.classList.add("showPhoto");
@@ -203,18 +197,14 @@ btn.addEventListener("click", () => {
 
   // 5. Reset mugs (1s after photo fade-out starts)
   setTimeout(() => {
-    // 5a. Remove 'show' classes: This immediately starts the 1s fade-out (opacity 1 -> 0)
-    leftMug.classList.remove("showLeft");
-    rightMug.classList.remove("showRight");
-    
-    // 5b. Reset rotation immediately, as this is part of the starting position
-    leftMug.style.transform = "rotate(-20deg)";
-    rightMug.style.transform = "rotate(20deg)";
-    
-    // 5c. After the fade-out is complete (1s), jump them back to the far off-screen position
+    // 5a. Remove the classes. This causes the mugs to fade out (opacity 1 -> 0)
+    // and slide back to the starting positions defined in #leftMug/#rightMug CSS (left: -300px)
+    leftMug.classList.remove("showLeft", "clink");
+    rightMug.classList.remove("showRight", "clink");
+
+    // Re-enable the button after animation completes
     setTimeout(() => {
-        leftMug.style.left = "-300px";
-        rightMug.style.right = "-300px";
+        btn.disabled = false;
     }, 1000);
     
   }, 7000);
